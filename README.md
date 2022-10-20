@@ -277,14 +277,57 @@ Conclusion, exécuter notre projet Spring Boot, quelles que soient ses fonctionn
 - Spring Boot **Actuator** permet de **monitorer** et **gérer** une application **pendant son exécution**.
 - Le déploiement de l’application est facilité par la génération d’un JAR, et pour les projets web, un **tomcat est embarqué**.
 
+## Découvrez les étapes clés de tout projet Spring Boot
 
+### Créez votre projet
+Dans cette partie de cours, nous allons ensemble découvrir les étapes clés pour tout projet Spring Boot. Cette partie est construite comme une sorte de mode d’emploi, auquel vous pouvez vous référer quelle que soit l’application que vous réalisez !
 
+Créons ensemble le fameux **“Hello World”** avec Spring Boot !
 
+Tout d’abord, voici le plan d’action pour tout projet Spring Boot :
+1. Créer le projet, c’est-à-dire générer la structure minimale.
+2. Structurer et configurer le projet.
+3. Écrire le code.
+4. Tester et déployer.
 
+Chaque étape du plan d’action correspond à un chapitre de cette partie du cours. Et les 2 parties de cours suivantes sont construites sur la base des mêmes étapes.
 
+C’est parti pour la première étape : **créons notre projet !** 😎
 
+#### Découvrez les starters
+> On commence par quoi ?
 
+La première étape implique de générer la base de votre projet. Vous devez savoir qu’on ne commence pas sur une feuille blanche. Spring Boot nous fournit une base de travail que l’on peut nommer la **structure minimale**. On enrichira ensuite cette structure minimale en fonction des besoins de notre projet.
 
+Pour obtenir cette structure minimale, il y a plusieurs solutions que l’on explorera dans la suite du chapitre. Mais avant de foncer tête baissée, sachez que Spring Boot va vous demander un certain nombre d’informations, comme :
+- la version de Java ;
+- Maven ou Gradle ;
+- la version de Spring Boot ;
+- des informations sur le projet (groupId, artifactId, nom du package) ;
+- les dépendances.
 
+Pour les premiers éléments, ce ne sera pas difficile ; ça pourrait par contre le devenir pour le choix des dépendances, car Spring Boot utilise quelque chose de nouveau : **les starters de dépendances**.
 
+J’ai déjà eu l’occasion dans la partie précédente de vous en parler, mais un rappel ne fera pas de mal.
+
+Spring Framework se découpe en de nombreux composants ; les utiliser implique de renseigner les bonnes dépendances pour notre projet. Ce n’est pas facile, car il faut savoir quelle dépendance est nécessaire à quelle autre dépendance, s’il y a des incompatibilités, et quelles sont les versions à utiliser.
+
+Pour résoudre cette problématique, Spring Boot nous offre les starters de dépendances qui sont des kits de dépendances (vous vous souvenez de mon exemple avec les gammes de meubles, voilà !  ).
+
+Par exemple, le starter **spring-boot-starter-data-jpa** va vous apporter différents JAR pour utiliser Spring et JPA, afin de communiquer avec une base de données.
+
+Tous les starters sont préfixés par “spring-boot-starter”. Voici quelques exemples de starters :
+- spring-boot-starter-core ;
+- spring-boot-starter-data-jpa ;
+- spring-boot-starter-security ;
+- spring-boot-starter-test ;
+- spring-boot-starter-web.
+
+> Comment choisir les bons starters pour mon projet ?
+
+Normalement, la **description du starter** est suffisante pour identifier si ce dernier est ce dont vous avez besoin ou non. Sans oublier que la documentation officielle de Spring saura toujours vous guider vers le bon starter en fonction de vos besoins.
+
+Il n’y rien de plus à savoir sur la question, je crois qu’il est temps de pratiquer !
+
+Il existe deux façons de créer un projet : avec Spring Initializr et avec Spring Tool suite. Nous allons aborder ces deux approches ensemble !
 
