@@ -146,17 +146,80 @@ Spring Framework, c’est un peu comme un **grand magasin spécialisé** : il y 
 
 ![composantsSpring](/readMeIMG/composantsSpring.png)
 
+#### Spring Core
+Ce composant est **la base de l’écosystème** Spring. 
 
+Il contient le **“core container”** (ce qui permet l’injection de dépendances vue précédemment), mais il contient également **Spring MVC** qui permet de faire du web et de Data Access qui fournit des éléments fondamentaux pour la communication avec les bases de données.
 
+> Pour avoir tout le détail, suivez la [documentation officielle](https://spring.io/projects/spring-framework) sur Spring Core.
 
+#### Spring Data
+Ce composant permet de **communiquer avec de nombreux types de bases de données**. Par exemple, il offre la capacité de communiquer avec une base de données en implémentant uniquement des interfaces grâce à des conventions de nommage : bluffant !
 
+> Pour avoir tout le détail, suivez la [documentation officielle](https://spring.io/projects/spring-data) sur Spring Data.
 
+#### Spring Security
+Pensez-vous que la sécurité soit un élément essentiel d’une application ? Moi, oui ! Et des millions de développeurs partagent ce point de vue. C’est pour ça que ce composant est l’un des plus critiques de Spring Framework, bien qu’il soit aussi l’un des plus complexes.
+Il permet de gérer **l’authentification**, **l’autorisation**, mais aussi la **sécurité des API**.
 
+> Pour avoir tout le détail, suivez la [documentation officielle](https://spring.io/projects/spring-security) sur Spring Security. 
 
+#### Spring Cloud
+Avez-vous entendu parler de **l’architecture microservice** ? Si ce n’est pas le cas, ne vous inquiétez pas, mais cela va venir très vite car c’est le modèle d'architecture le plus prisé actuellement. Et pour répondre aux contraintes de cette architecture logicielle, Spring Framework fournit Spring Cloud. 
 
+> Pour avoir tout le détail, suivez la [documentation officielle](https://spring.io/projects/spring-cloud) sur Spring Cloud.
 
+#### Spring Boot
+C’est un composant très particulier de Spring Framework, dans la mesure où il nous permet de mettre en œuvre tous les autres. Ce cours vous montrera comment tirer profit de la puissance de Spring Boot, et de ses avantages qui sont :
+- l'**autoconfiguration** automatique de Spring ;
+- des **starters de dépendances** ;
+- des **endpoints Actuator** pour fournir des données sur l’application.
 
+>Pour avoir tout le détail, vous pouvez suivre la [documentation officielle](https://spring.io/projects/spring-boot) sur Spring Boot. 
+>
+>Et ce n’est pas tout ! Pour explorer tous les autres projets, vous pouvez vous rendre sur [cette page](https://spring.io/projects).
 
+#### En résumé
+- Spring propose de **nombreux composants** pour répondre aux besoins des développeurs !
+- L’un des plus utiles est **Spring Boot**, car il permet de mettre en œuvre les autres composants de Spring avec facilité, notamment grâce **aux starters de dépendances** et à **l’autoconfiguration**.
+
+### Identifiez les avantages de Spring Boot
+
+#### Simplifiez votre projet avec Spring Boot
+Vous l’avez noté, Spring est un écosystème avec un grand E ! À tel point que parfois ce framework peut même sembler trop rigide, trop encombrant ou trop complexe, il faut le reconnaître. De plus, il contient de nombreux composants, et ces derniers ne s’utilisent pas de façon exclusive : dans la très grande majorité des projets, vous devrez utiliser **plusieurs composants de Spring simultanément**. Par voie de conséquence, l’intégration de plusieurs composants Spring pour un même projet ajoute de la complexité. **Complexité qui sera croissante** plus le projet prendra de l’importance !
+
+Non non, ne fuyez pas !😅 Rassurez-vous, une solution existe ! Nous pouvons tirer profit de tous les avantages de Spring sans y perdre notre latin !
+
+> Comment faire ? 😱
+
+Je vous en ai déjà brièvement parlé au chapitre précédent, il s’agit d’utiliser **Spring Boot** ! Ce composant de Spring a été créé pour nous aider à utiliser Spring Framework. C’est un composant **au service des autres composants**.
+
+Illustrons l’idée. Vous vous souvenez peut-être de la comparaison que j’ai déjà utilisée : Spring Framework est comme un grand magasin spécialisé de meubles, où un composant est tel un meuble que l’on peut acheter.
+
+Eh bien Spring Boot, c’est comme des gammes de meubles qui nous sont proposées. Lorsqu’on achète un meuble, il est certain que les autres meubles de la même gamme iront ensemble (c’est pour ça que c’est une gamme !), et cela évite les surprises lors de l’association des meubles.
+
+Là, c’est pareil : Spring Boot nous met à disposition les bons composants, nous permettant ainsi de les faire fonctionner ensemble.
+
+Et cela contribuera à la **simplification** de notre projet !
+
+#### À vous de jouer !
+Jouons au jeu des 7 différences ! Je vous propose de comparer deux projets Java qui utilisent Spring Framework. L’un utilise le composant Spring Boot, l’autre non.
+
+La consigne est simple : **Quelles différences pouvez-vous observer ?**
+
+Projet **[sans](https://github.com/OpenClassrooms-Student-Center/creez-une-application-spring-boot/tree/master/webwithoutsb)** Spring Boot;
+
+Projet **[avec](https://github.com/OpenClassrooms-Student-Center/creez-une-application-spring-boot/tree/master/webwithsb)** Spring Boot.
+
+Alors, qu’avez-vous noté ?
+
+Je vous décris les différences entre ces deux projets, en mettant en avant les avantages de Spring Boot ✅.
+| **Répertoires**    | **Sans Spring Boot**                                         | **Avec Spring Boot**                                         |
+| :----------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| src/main/java      | 4 classes Java : <br />   1. HomeController.java<br />   2. User.java<br />   3. UserRepository.java<br />   4. **JpaConfig.java** : c’est moi qui ai créé cette classe… 😅 | 4 classes Java :<br />   1. HomeController.java<br />   2. User.java<br />   3. UserRepository.java<br />   4. **WebwithsbApplication.java** : c’est une classe créée automatiquement par Spring Boot, plus de perte de temps ! ✅ |
+| src/main/resources | - **contextFront.xml** : configuration manuelle du scanning et du viewresolver<br /> - **META-INFO/persistence.xml** : contient la configuration de la BDD | - **Pas besoin de contextFront** : Spring Boot s’en occupe ! ✅<br /> - **application.properties** : contient la configuration de la BDD. Est plus simple à aborder que XML. <br /> - ✅**template/home.html** : rendu HTML à fournir. |
+| src/main/webapp    | **2 fichiers** :<br /> - **template/home.jsp** : rendu HTML à fournir<br /> - **web.xml** : fournit de la configuration pour la gestion des servlets | Ce dossier **n’existe pas** ! Spring Boot n’a pas besoin de tout ça ! ✅ |
+| fichiers pom.xml   | **8** dépendances<br />+ **2** dépendances dans le dependencyManagement pour les versions | **5** dépendances **sans avoir défini les versions**         |
 
 
 
