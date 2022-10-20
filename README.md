@@ -144,7 +144,7 @@ La solution ? Direction les magasins spécialisés pour acheter le nécessaire. 
 
 Spring Framework, c’est un peu comme un **grand magasin spécialisé** : il y a de nombreuses choses à trouver, et après, à nous de faire l’assemblage. Faisons un tour des rayons ensemble ! 🧐
 
-![composantsSpring](readMeIMG\composantsSpring.png)
+![composantsSpring](/readMeIMG/composantsSpring.png)
 
 
 
