@@ -221,17 +221,61 @@ Je vous décris les différences entre ces deux projets, en mettant en avant les
 | src/main/webapp    | **2 fichiers** :<br /> - **template/home.jsp** : rendu HTML à fournir<br /> - **web.xml** : fournit de la configuration pour la gestion des servlets | Ce dossier **n’existe pas** ! Spring Boot n’a pas besoin de tout ça ! ✅ |
 | fichiers pom.xml   | **8** dépendances<br />+ **2** dépendances dans le dependencyManagement pour les versions | **5** dépendances **sans avoir défini les versions**         |
 
+👉 Moins de fichiers, plus d’automatisation… Bref, c’est une victoire très nette de Spring Boot, qui nous simplifie la vie !
 
+Et cerise sur le gâteau : pour le déploiement, le projet avec Spring Boot se lance avec une simple commande, alors que le projet sans Spring Boot me demande d’installer un serveur web (comme Tomcat) pour le déployer et le démarrer.
 
+Vraiment, jusqu’au bout, Spring Boot nous simplifie les choses ! 🤩
 
+#### Les avantages de Spring Boot
+Reprenons notre souffle après cet exercice, et analysons les avantages de Spring Boot.
 
+##### Avantage n° 1 : optimisation de la gestion des dépendances
+Spring Boot nous fournit des **starters**, qui correspondent à un ensemble de dépendances homogénéisées (associations, versions). On peut les comparer à des **kits de dépendances**.
+[Les Starters](https://user.oc-static.com/upload/2020/11/10/1605004979024_image3.png)
 
+Nul besoin de définir les versions des dépendances explicitement dans le pom.xml : Maven les déduit grâce à la version de Spring Boot utilisée.
 
+Dans ce cours, nous allons apprendre à choisir les bons starters en fonction du besoin.
 
+##### Avantage n° 2 : l’autoconfiguration
+C’est peut-être l’avantage le plus important de Spring Boot ! L’exercice précédent l’a révélé : avec Spring Boot, il y a beaucoup moins de configuration (concernant la gestion des servlets, le chargement du contexte Spring, la connexion à la base de données). Ce n’est pas un hasard. L’utilisation de Spring Boot, et l’annotation @SpringBootApplication placée au niveau de la classe principale de notre projet (celle générée automatiquement), déclenchent automatiquement de nombreuses opérations en background qui nous sont nécessaires.
 
+Le développeur peut alors **se concentrer sur le code métier** au lieu de passer un temps fou à configurer le framework qu’il utilise.
 
+Au fur et à mesure du cours, je vous en dirai plus sur les opérations que Spring Boot réalise en background.
 
+##### Avantage n° 3 : la gestion des propriétés
+Spring Boot permet de **gérer les propriétés au sein d’un programme en toute simplicité**.
 
+Dans l’exercice, vous avez pu voir le fichier **applications.properties**. Les informations qui étaient saisies ont été prises en compte par certaines classes, sans que nous ayons besoin d’agir. Ce fichier est **l’un des éléments clés** pour la gestion des propriétés de notre programme.
+
+Mais cela ne se limite pas à ce simple fichier ; par exemple, il est facilement possible de récupérer même des variables d’environnement système, et de les fournir à nos classes.
+
+Dans ce cours, nous découvrirons comment tirer profit de la capacité de Spring Boot à gérer les propriétés.
+
+##### Avantage n° 4 : le monitoring et la gestion du programme
+Je ne souhaite pas rentrer dans le détail ici, mais sachez que **Spring Boot Actuator** correspond à une fonctionnalité de Spring Boot qui permet de **monitorer et de manager notre programme** pendant qu’il est en cours d’exécution.
+
+Par exemple, grâce aux **endpoints Actuator**, on peut modifier une propriété en live, et le programme en tiendra compte sans qu’on ait besoin de le redémarrer. Très utile !
+
+##### Avantage n° 5 : le déploiement
+Quel est l’artefact produit par un projet Spring Boot ? Un simple fichier JAR. 
+
+Que faut-il pour exécuter un JAR ? Vous le savez, une JRE, et c’est tout !
+> Mais comment est-ce possible pour une application web qui a forcément besoin d’un serveur de conteneur web ?
+
+Un projet Spring Boot contient un tomcat embarqué au sein même du JAR généré. Le projet web peut donc être déployé au sein de ce tomcat embarqué.
+
+Conclusion, exécuter notre projet Spring Boot, quelles que soient ses fonctionnalités, est très simple ! Et cela permet de coupler facilement nos projets Spring Boot avec d’autres outils comme Docker.
+
+#### En résumé
+- Spring Boot œuvre pour la **simplification** du développement de nos projets avec Spring Framework.
+- La gestion des dépendances est simplifiée grâce aux **starters** qui **regroupent plusieurs dépendances** et **homogénéisent les versions**.
+- L’**autoconfiguration** permet de **se concentrer sur le code métier**, et simplifie énormément la mise en œuvre des composants Spring qui sont utilisés.
+- La gestion efficace des propriétés rend notre application **configurable**.
+- Spring Boot **Actuator** permet de **monitorer** et **gérer** une application **pendant son exécution**.
+- Le déploiement de l’application est facilité par la génération d’un JAR, et pour les projets web, un **tomcat est embarqué**.
 
 
 
