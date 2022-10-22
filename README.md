@@ -351,6 +351,158 @@ Aucune dépendance à ajouter, car le starter “**spring-boot-starter**”, qui
 Voilà, notre première étape est finie ! 
 
 #### Créez votre projet avec Spring Tool Suite
+Une deuxième façon d'atteindre le même résultat correspond à l’utilisation de l’outil Spring Tool Suite, téléchargeable [ici](https://spring.io/tools).
+
+Je vous conseille **Spring Tools 4 for Eclipse**. Il est téléchargeable sur Linux, macOS et Windows. Vous obtenez un JAR qui, une fois exécuté, va créer un répertoire qui aura un nom du style “sts-4.7.1.RELEASE”. Au sein de ce répertoire, vous pouvez lancer l’exécutable “SpringToolSuite4.exe”.
+
+> Spring Tools 4 for Eclipse est un outil développé sur la base de l’IDE Eclipse. Les habitués de cet IDE ne seront donc pas dépaysés !
+
+Avez-vous remarqué qu’on retrouve les mêmes étapes, mais cette fois à travers un outil installé sur votre poste de travail, et non via un site web ?
+
+> Mais pourquoi utiliser Spring Tool Suite et non Spring Initializr, qui ne demande aucun outil supplémentaire ?
+
+Pour la simple raison que STS (Spring Tool Suite) nous offre une fonctionnalité supplémentaire : le “**Boot Dashboard**”, qui permet de gérer plus précisément le **cycle de vie de l’exécution de l’application**. Et comme STS est tout simplement un Eclipse customisé, on peut directement développer notre projet au sein de l’outil. Assez pratique, finalement. 
+
+Pour finir cette partie, je vous encourage à jeter un œil au fichier pom.xml (à la racine de la structure du projet). Vous y retrouverez tous les éléments saisis lors de la génération de votre projet. En voici d’ailleurs 2 extraits :
+
+Extrait de la description du projet :
+```java
+<groupId>com.openclassrooms</groupId>
+<artifactId>helloworld</artifactId>
+<version>0.0.1-SNAPSHOT</version>
+<name>helloworld</name>
+<description>Hello World project with Spring Boot</description>
+```
+
+Extrait des dépendances du projet :
+```java
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter</artifactId>
+    </dependency>
+    ….
+</dependencies>
+```
+
+#### En résumé
+- La première étape pour utiliser Spring Boot est de **créer la structure minimale**.
+- On obtient la structure minimale en fournissant plusieurs informations, dont **les starters de dépendances**.
+- Un projet Spring Boot peut être créé via **Spring Initializr** ou bien via **Spring Tool Suite**.
+
+### Observez la structure minimale
+#### Explorez la structure minimale
+Voici le projet à travers la vue Package Explorer de STS. Qu'observez-vous? Comment les sources sont-elles organisées ?
+
+Voici quelques points à noter :
+- Nous retrouvons les fichiers liés à Maven (pom.xml, mvnw et mvnw.cmd).
+- Nos sources sont organisées suivant le schéma standard :
+    - src/main/java : contient les packages et les classes Java ;
+    - src/main/resources : contient les fichiers ressources, tels que les fichiers de propriétés ou des templates (HTML, par exemple) ;
+    - src/test/java : contient les classes Java de test.
+- Comme tout projet Java/Maven, on retrouve également la JRE et les Maven Dependencies.
+
+J’attire également votre attention sur le fait que cette structure minimale ne contient pas que des répertoires et des packages : il y a aussi deux classes Java et un fichier Propriétés.
+
+Le fichier de propriétés “application.properties” est créé par défaut, mais il est vide ; j’y reviendrai plus tard, promis !
+
+Pour ce qui de la classe HelloWorldApplicationTests.java, je ne souhaite pas m’y arrêter non plus à cette étape ; sachez juste pour le moment qu’elle vérifie que le contexte Spring se lance bien comme attendu.
+
+Maintenant, parlons de HelloWorldApplication.java, qui est la **classe principale** de votre projet. On y retrouve 2 choses importantes :
+1. La méthode main dont je ne vous ferai pas l’offense de vous expliquer son rôle en Java !
+2. L’annotation @SpringBootApplication qui est critique !
+
+> S T O P ! Annotation, tu dis ?
+
+Vous avez raison, je vais vous expliquer ce qu’est une annotation, et son utilité au sein de Spring.
+
+#### Découvrez le rôle des annotations et leurs avantages
+Nous avons vu ensemble que Spring Framework fournit l’IoC container, dans la partie 1 du cours. L’IoC container va instancier pour vous des classes, puis si nécessaire les injecter dans d’autres instances de classe. Pour qu’une classe soit manipulée par l’IoC container, **il est nécessaire de l’indiquer explicitement à Spring**. Comment ?
+
+La première solution est l’utilisation de **fichiers XML** au sein desquels on décrit les classes que Spring doit gérer ; voici un exemple des plus simples :
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN 2.0//EN"
+    "http://www.springframework.org/dtd/spring-beans-2.0.dtd">
+
+<beans>
+    <bean id="myBean" class="com.openclassrooms.BeanImpl"/>
+</beans>
+```
+
+La classe com.openclassrooms.BeanImpl (qui a été créée préalablement, évidemment) sera ainsi prise en compte par l’IoC container.
+
+> Cette solution est l’une des plus anciennes façons de faire. Aujourd’hui, elle est de moins en moins utilisée, de par sa complexité.
+
+La seconde solution est l’utilisation des annotations.
+
+Une annotation, c’est-à-dire **@[nom de l’annotation]**, peut être ajoutée à une classe, une méthode, un attribut. **L’annotation influe sur le comportement du programme** car elle fournit des métadonnées lors de la compilation ; ces mêmes métadonnées seront utilisées lors de l’exécution.
+
+Depuis la version 2.5 de Spring, de nombreuses annotations sont fournies, dont le but est de :
+1. Permettre à l’IoC container d’**utiliser nos classes**.
+2. **Influer sur le comportement** de Spring.
+
+Voici quelques exemples d’annotations Spring :
+- @Component
+- @Autowired
+- @Qualifier
+
+> Il n’y a pas que Spring qui utilise les annotations. Il en existe au sein même de Java, et d’autres frameworks utilisent aussi ce puissant outil.
+
+Si on reprend l’exemple précédent, voici la correspondance en annotation :
+```java
+package com.openclassrooms;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
+@Component
+@Qualifier(“myBean”)
+public class BeanImpl {
+    // TO DO
+}
+```
+
+L’annotation @Component permet de déclarer la classe BeanImpl auprès de Spring, comme étant un bean à avoir dans l’IoC container.
+
+L’annotation @Qualifier permet de donner un nom à ce bean, en l'occurrence “myBean” (si cette annotation n’est pas définie, le nom par défaut est le nom de la classe).
+
+Qu’en dites-vous ? C’est plus sympa, non ? Nul besoin de manipuler du XML, tout se passe dans le Java !
+
+> En réalité, il n’y a pas vraiment une meilleure façon de faire, les 2 sont valides. La configuration via XML est la façon historique de faire, et on la retrouve encore sur de nombreux projets. Tandis que la configuration par annotations est ce qui s’utilise de plus en plus, notamment par la démocratisation de Spring Boot.
+
+#### Utilisez l’annotation @SpringBootApplication
+Revenons maintenant à nos moutons ! Ou plutôt à **l’annotation @SpringBootApplication**. À quoi sert-elle ?
+
+Comme je vous l’ai expliqué, elle va permettre à l’IoC container de manipuler la classe HelloWorldApplication.java. Elle permettra également d’influer sur le comportement de Spring.
+
+@SpringBootApplication est un composé de 3 autres annotations :
+1. **@SpringBootConfiguration** : la classe sera utilisée comme une classe de configuration (on reviendra sur cette notion plus tard).
+2. **@EnableAutoConfiguration** : active la fameuse fonctionnalité d’autoconfiguration de Spring Boot, que je vous ai tant vantée.
+3. **@ComponentScan** : active le “**scanning**” de classes dans le package de la classe et dans ses sous-packages. Sans cette annotation, l’IoC container ne tiendra pas compte de vos classes, même si vous avez ajouté une annotation sur celles-ci. 
+
+OK, on y voit plus clair maintenant ! **En résumé, cette classe, c’est ce qui déclenche toute la mécanique interne de Spring Boot et des composants Spring associés**. Et tout ça en moins de 15 lignes de code.
+
+Nous voilà au bout de l’analyse de la structure minimale d’un projet Spring Boot, et quelle conclusion tirons-nous ?
+
+Oui, nous avons une base, c’est vrai, mais il y a des trous !
+1. Au sein de src/main/java, nous avons **un seul package**. Et vu qu’un développeur apprend à regrouper les classes par sous-ensemble, nous allons devoir **créer des sous-packages** pour nos différentes classes à venir.
+2. Le fichier applications.properties est vide ! Le pauvre, il doit se sentir bien inutile... Rassurez-vous, on va vite lui donner un rôle à jouer !
+
+Remplissons ces trous pour pouvoir aller de l’avant !
+
+#### En résumé
+- La structure minimale n’est pas suffisante, il faut l’enrichir.
+- Les **annotations sont un pilier** au sein de Spring Boot pour tirer profit de l’IoC container.
+- L’annotation **@SpringBootApplication** est la concaténation de plusieurs annotations, et son objectif est de déclencher toute la mécanique interne de Spring.
+
+
+
+
+
+
+
+
 
 
 
