@@ -331,3 +331,30 @@ Il n’y rien de plus à savoir sur la question, je crois qu’il est temps de p
 
 Il existe deux façons de créer un projet : avec Spring Initializr et avec Spring Tool suite. Nous allons aborder ces deux approches ensemble !
 
+#### Créez votre projet avec Spring Initializr
+
+Voyons comment utiliser le site web [Spring Initializr](https://start.spring.io/).
+
+Récapitulons les étapes :
+1. J’ai laissé par défaut Project / Language et Spring Boot.
+2. J’ai saisi les informations suivantes dans Project Metadata :
+   - Group: com.openclassrooms.
+   - Artifact: HelloWorld.
+   - Name: HelloWorld.
+   - Description: Hello World project with Spring Boot.
+   - Package name: com.openclassrooms.helloworld.
+   - Packaging: Jar.
+   - Java: 8.
+
+Aucune dépendance à ajouter, car le starter “**spring-boot-starter**”, qui contient toutes les fonctionnalités de base, est ajouté par défaut. J’ai cliqué sur “Generate”, et une archive ZIP avec le projet a été téléchargée. Après avoir dézippé l’archive, j’ai tout simplement importé ce projet existant dans mon IDE.
+
+Voilà, notre première étape est finie ! 
+
+#### Créez votre projet avec Spring Tool Suite
+
+
+
+
+
+
+
