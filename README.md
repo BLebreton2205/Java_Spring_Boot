@@ -686,15 +686,112 @@ Résultat : nul besoin de gérer l’instanciation du BusinessService, Spring s�
 - Pour qu’une classe soit **déclarée en tant que bean**, on l’annote **@Component**.
 - Pour qu’un bean **soit injecté** dans un attribut, on annote l’attribut **@Autowired**.
 
-### 
+### Découvrez Spring Boot Test et déployez votre projet
+#### Abordez la dernière étape : les tests et le déploiement
+C’est ici la dernière ligne droite, et je sens l’adrénaline monter! 😃
 
+Pour conclure notre application HelloWorld, il nous reste 2 choses à faire :
+1. Tester notre application.
+2. Déployer notre application.
 
+Pas besoin de vous expliquer que les tests sont utiles, je suis convaincu que vous avez déjà conscience de leur importance.
 
+> Si vous n’êtes pas à l’aise avec les tests en Java, je vous conseille d’aller regarder le cours [Testez votre code Java pour réaliser des applications de qualité](https://openclassrooms.com/fr/courses/6100311-testez-votre-code-java-pour-realiser-des-applications-de-qualite).
 
+“Déployer” revient à mettre en route notre application. Autrement dit, il s’agit de **passer de l’environnement de développement à l’environnement de production**.
 
+Voyons tout ça dans le détail, c’est parti !
 
+#### Découvrez Spring Boot Test
+Je vous en ai parlé précédemment, lors de la création de la structure minimale du projet, une classe de test a été créée, à savoir **HelloWorldApplicationTests.java**. Allons la regarder de plus près ;-) !
+```java
+package com.openclassrooms.helloworld;
 
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 
+@SpringBootTest
+class HelloworldApplicationTests {
 
+    @Test
+    void contextLoads() { }
 
+}
+```
 
+Plutôt simple, n’est-ce pas ? Presque étonnant, d’ailleurs ! Expliquons.
+
+**@SpringBootTest** est une annotation fournie par Spring Boot. Elle permet **lors de l’exécution des tests d’initialiser le contexte Spring**. Les beans de notre application peuvent alors être utilisés.
+
+Rappelons qu’un test s’exécute de façon unitaire, presque comme une application à part entière. Par défaut, notre test n’a donc aucune connaissance du contexte Spring. Dans le cas d’une application Spring Boot, c’est un vrai problème !
+
+Mais le problème est résolu grâce à l’annotation @SpringBootTest.
+
+La méthode contextLoads est **annotée @Test** (annotation qui provient de JUnit ; quand je vous disais que d’autres frameworks utilisent les annotations 😉), et n’a pas de contenu.
+
+> Pourquoi n'est elle pas contenu ?
+
+Tout simplement parce que son unique objectif est de **vérifier que le contexte Spring se charge bien**.
+
+Sans méthode de tests (c’est-à-dire sans méthode avec @Test), notre classe de test ne peut être exécutée, même si elle est annotée @SpringBootTest. Pour parer à cela, Spring Boot génère une méthode vide annotée @Test, et qui sera donc toujours success pour JUnit (car elle est vide).
+
+Ainsi, lors de l’exécution de cette méthode, le contexte Spring sera chargé, et si ce dernier rencontre une erreur, alors l’exécution de la classe de test retournera une erreur.
+
+Très bien ! Maintenant, testons notre HelloWorld !
+
+> D’accord, mais on teste quoi ?
+
+Le but de ce cours n’est pas de vous expliquer les méthodologies de test. Mais rappelez-vous toujours qu’au sein d’un projet, on va **tester les traitements métiers** pour s’assurer qu’ils correspondent bien aux attendus.
+
+Dans notre cas, le traitement métier est représenté par la méthode getHelloWorld() de la classe BusinessService.
+
+Donc, nous allons tester cette méthode.
+
+Je vous laisse essayer, voici quelques indices :
+1. Ajoutez une nouvelle méthode de test.
+2. Injectez une instance de BusinessService dans la classe de test.
+3. Vérifiez que l’attribut “value” de l’objet HelloWorld contient bien le texte “Hello World!”.
+
+Ensuite, il ne vous reste plus qu’à faire un clic droit sur la classe, “Run As”, “JUnit Test”.
+
+```java
+package com.test.helloworld;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import com.test.helloworld.service.BusinessService;
+
+@SpringBootTest
+class HelloworldApplicationTests {
+
+	@Autowired
+	private BusinessService bs; 
+
+	@Test
+	void contextLoads() {
+	}
+	
+	@Test
+	public void testGetHelloWorld() {
+		String expected = "Hello World!";
+		
+		String result = bs.getHelloWorld().getValue();
+		
+		assertEquals(expected, result);
+	}
+
+}
+```
+
+Analysons :
+- Lignes 14/15 : j’injecte une instance de BusinessService dans un attribut nommé bs. À noter que sans l’annotation @SpringBootTest, cela échouera car sans contexte Spring, impossible de faire de l’injection de dépendances.
+- Lignes 21/22 : j’écris ma méthode, sans oublier d’annoter @Test.
+- Ligne 23 : je définis le résultat attendu pour la valeur “Hello World!”.
+- Ligne 25 : je récupère, à travers l’instance du BusinessService, un objet HelloWorld, puis j’appelle la méthode getValue et affecte le résultat dans une variable nommée result.
+- Ligne 27 : grâce à assertEquals, je compare les 2 variables. Si elles sont égales, le test réussit, sinon il échoue.
+
+Allez ! Passons au déploiement !
