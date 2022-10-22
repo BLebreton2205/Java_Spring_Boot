@@ -831,11 +831,59 @@ Les méthodes de déploiement et d’exécution via l’IDE et Maven sont surtou
     - En exécutant la commande java -jar.
 
 ## Partie 3 - Créez une API avec Spring Boot
+### Créez l'API avec les bons starters
+Bienvenue dans la troisième partie du cours sur Spring Boot !
 
+> Que vas-tu nous apprendre, vu que l’on connaît désormais chaque étape pour programmer une application avec Spring Boot ?
 
+Tututu, ne vous emballez pas, il y a tout à apprendre encore ! C’est vrai, je vous ai appris à vous servir du marteau pour planter un clou, mais avez-vous pour autant réalisé un ouvrage digne de ce nom ? Je ne crois pas. 
 
+C’est justement l’objectif de la partie 3 et de la partie 4 de ce cours : réaliser des applications avec Spring Boot, qui vont bien au-delà d’un simple Hello World ; c’est-à-dire **construire un projet digne de ce nom**.
 
+Je vous propose un deal pour chaque étape, je vous donne quelques indices, vous essayez puis on corrige.
 
+Autant dire que vous n’allez pas vous ennuyer ! 
+
+Prêt ?! Que la force soit avec vous ! 
+
+#### Plongez-vous dans votre nouvelle mission
+[Logo HR Association](https://user.oc-static.com/upload/2020/11/11/1605073055986_18.png)
+
+HR Association est une entreprise qui souhaite offrir un service de gestion d’employés aux petites entreprises.
+
+L’idée est d’offrir une suite d’outils numériques (logiciel, application web, voire application mobile) prête à l’emploi.
+
+Voici l’architecture imaginée :
+
+[Architecture des composants logiciels de HR Association](https://user.oc-static.com/upload/2020/11/11/16050731499577_image9.png)
+
+Pour lancer ce projet, HR Association souhaite avant tout mettre à disposition une API qui permettra à toutes les autres applications d’accéder aux mêmes données.
+
+Vous allez réaliser une **API**. Rappelons-le, une API est un programme qui a pour vocation de **communiquer avec d’autres programmes**. L’idée étant de gérer des **employés**, l’API devra donc offrir un **CRUD** (Create, Read, Update, Delete) pour les données des employés.
+
+Les données seront dans une **base de données H2** (pour ceux qui sont un peu initiés aux bases de données, n’hésitez pas à faire du MySQL, PostgreSQL ou autre).
+
+> H2 est une base de données relationnelle Java très légère, qui par défaut fonctionne en “in memory”. Cela signifie qu’au démarrage du programme, la structure de la base est construite ; et lorsque le programme s’arrête, le contenu de la base de données est supprimé. On ne conserve donc pas les modifications apportées d’une exécution à l’autre du programme.
+
+Notre API devra donc **exposer des endpoints** correspondant aux actions du CRUD, et **communiquer avec la base de données** pour récupérer ou modifier les informations des employés. À noter que l’API sera de type **REST**.
+
+> Besoin de découvrir les API REST ? Par ici avec le cours [Adoptez les API REST pour vos projets web](https://openclassrooms.com/fr/courses/6573181-adoptez-les-api-rest-pour-vos-projets-web).
+
+#### À vous de jouer
+Vous souvenez-vous de la première étape ? **Créer la structure minimale du projet en définissant les bons starters** !
+
+Prenez en compte les besoins techniques de l’application, cherchez les starters dans la liste existante, et **regardez avec soin les descriptions** pour identifier ceux qui vous sont nécessaires ! On se retrouve dans quelques minutes pour la correction.
+
+#### Correction : identifiez les bons starters pour créer l'API
+Quelques explications :
+- Pour les “Project Metadata”, je suis resté simple :
+    - group: com.openclassrooms (un standard) ;
+    - artifact: api (on “appelle un chat un chat”, n’est-ce pas ?).
+- Pour les dépendances :
+    - **Spring Web** : comme la description l’indique, permet de faire du RESTful, ce qui correspond à notre API pour exposer des endpoints.
+    - **Lombok** : vous ne pouviez pas le deviner, c’est une librarie pour optimiser certaines classes, je vous en parle un peu plus loin dans le chapitre.
+    - **H2 Database** : comme on dit, “C'est comme le Port-Salut, c'est écrit dessus” ; on veut faire du H2, alors on prend cette dépendance.
+    - **Spring Data JPA** : permet de gérer la persistance des données avec la base de données ; peut-être le plus difficile à identifier pour vous si vous n’avez jamais fait de persistance de données avec Spring.
 
 
 
