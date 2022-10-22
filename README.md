@@ -496,9 +496,197 @@ Remplissons ces trous pour pouvoir aller de l’avant !
 - Les **annotations sont un pilier** au sein de Spring Boot pour tirer profit de l’IoC container.
 - L’annotation **@SpringBootApplication** est la concaténation de plusieurs annotations, et son objectif est de déclencher toute la mécanique interne de Spring.
 
+### Structurez et configurez votre projet
+#### Structurez vos packages
+> Comment structurer notre package si on ne connaît pas encore les classes qui seront produites ?
 
+Bonne question, je vois que vous êtes réfléchi et que vous avez appris à ne pas foncer tête baissée ! Bravo !
 
+La réponse se veut très simple : **les bonnes pratiques** !
 
+Premièrement, gardons à l’esprit que Spring Boot est particulièrement utilisé dans le contexte d’application web (même si ça ne se limite pas à cela).
+
+Deuxièmement, la majorité des applications ont la nécessité d'interagir avec des données externes (par exemple une base de données, un autre programme, ou même le système de fichiers).
+
+De ces différents besoins, une architecture en couches a émergé, avec un rôle pour chaque couche :
+- **couche Controller** : gestion des interactions entre l’utilisateur de l’application et l’application ;
+- **couche Service** : implémentation des traitements métiers spécifiques à l’application ;
+- **couche Repository** : interaction avec les sources de données externes ;
+- **couche Model** : implémentation des objets métiers qui seront manipulés par les autres couches.
+
+[Représentation visuelle de l'architecture en couches](https://user.oc-static.com/upload/2020/11/10/1605015466847_image11.png)
+
+Cette architecture standard correspondra à la majorité de vos projets, et vous la retrouvez très fréquemment.
+
+> D’autres packages peuvent être parfois nécessaires, par exemple un nommé “security” pour les classes dédiées à la sécurité, ou “configuration” pour des classes gérant les propriétés. Dans ce cas, cela s'ajoute à la structure existante.
+
+Pour être franc, on n'a pas besoin de tous ces packages pour un simple Hello World. Mais dans les parties du cours suivantes, vous les verrez en action.
+
+Dans notre cas, contentons-nous de créer les packages service et model.
+
+#### Complétez le fichier applications.properties
+L’étape suivante consiste à définir quelques informations de base pour notre application, à travers les propriétés.
+
+Mais avant, laissez-moi vous en apprendre un peu plus sur Spring et la gestion des propriétés. Je ne vous apprends rien en vous disant qu’une application doit être **paramétrable**, c’est-à-dire que son comportement peut changer en fonction des paramètres fournis.
+
+Pour rendre paramétrable une application, elle doit donc être capable de lire ces paramètres. Mais où sont-ils ? Qui les définit ? Comment les lire ?
+
+Ils sont dans des “**sources de propriétés**” (property sources), et sont définis par les gestionnaires de ces sources.
+
+Là où Spring Boot nous intéresse, c’est qu’il est capable de lire ces sources de propriétés (sans interaction de notre part), et de rendre les propriétés disponibles sous forme de beans au sein du contexte Spring.
+
+Parmi les sources de propriétés, il y a :
+- les propriétés de la JVM ;
+- les variables d’environnements du système d’exploitation ;
+- les arguments passés par la ligne de commande ;
+- les fichiers .properties ou .yml (comme *application.properties*).
+
+Vous aurez l’occasion de manipuler ces différentes sources de propriétés, mais pour le Hello World, on va se contenter de rajouter quelques informations au fichier applications.properties.
+
+> Comment fait-on pour connaître les propriétés existantes, vu que application.properties est vide ?
+
+Pour en savoir plus sur les propriétés de Spring, vous pouvez lire la [documentation de Spring](https://docs.spring.io/spring-boot/docs/current/reference/html/appendix-application-properties.html).
+
+D’accord, je vous aide, mettons en place 2 propriétés :
+1. spring.application.name : permet de donner un nom à notre application Spring Boot.
+2. logging.level.[package] : permet d’indiquer le log level pour un package donné.
+
+> Besoin d’en savoir plus sur les loggers ? Vous pouvez suivre le cours “Débuggez votre application Java”, et particulièrement le chapitre [“Faites des rapports avec un logger, des niveaux de log, et l’API SLF4J standard”](https://openclassrooms.com/fr/courses/6692416-debuggez-votre-application-java/6915582-faites-des-rapports-avec-un-logger-des-niveaux-de-log-et-l-api-slf4j-standard).
+
+Voilà le résultat de mon fichier applications.properties :
+```java
+spring.application.name=HelloWorld
+
+logging.level.org.springframework=error
+```
+
+Quelques explications :
+- Ici, le nom est arbitraire ; à vrai dire, cela n’aura pas d’impact sur le déroulement de l’application pour notre Hello World, c’est surtout informatif. 
+- `logging.level.org.springframework=ERROR` : les classes du package org.springframework affichent uniquement les logs de niveau ERROR dans la console (autrement dit, on n’est pas pollué par plein d’informations).
+
+C’est tout ! Nous n’avons rien à faire d’autre, car dans le monde magique de Spring Boot, les propriétés sont prises en compte automatiquement sans que le développeur ait d’autres actions à réaliser !
+
+#### En résumé
+- Je vous conseille de suivre les bonnes pratiques pour structurer vos packages, et de suivre **un modèle en couches**.
+    - En l’occurrence, nous avons opté pour 4 couches : Controller, Service, Repository et Model.
+    - L’approche en couches permet une meilleure évolution et une meilleure maintenabilité du code.
+- Spring Boot a la très grande capacité de savoir lire des **sources de propriétés**, et le fichier applications.properties en est la démonstration. Pour configurer rapidement et efficacement votre application, ajoutez vos propriétés au fichier applications.properties.
+
+### Écrivez votre premier Hello World
+#### Identifiez où et comment écrire votre code
+Le moment tant attendu pour nous développeurs est arrivé ! Nous allons **C-O-D-E-R** !
+
+Pour rappel, nous avons créé notre projet, puis nous l’avons structuré et configuré. Nous sommes maintenant à l’étape 3 : nous allons écrire le code métier, c’est-à-dire les traitements fonctionnels attendus. Pour réussir cette étape, nous allons devoir nous concentrer sur les beans que Spring doit gérer.
+
+> Pour rappel, un **bean est une classe au sein du contexte Spring** (l’IoC container).
+
+> Quels sont les besoins fonctionnels pour notre application HelloWorld ?
+
+Rien de plus simple, afficher le texte “Hello World!” dans la console.
+
+> De quoi avons-nous besoin pour atteindre cet objectif ?
+
+**Savoir écrire dans la console !**
+
+En Java, pour afficher du texte dans la console, la fonction **System.out.println()** permet de le faire. Mais où va-t-on placer notre code ?
+
+Reprenons notre classe principale :
+```java
+package com.test.helloworld;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class HelloworldApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(HelloworldApplication.class, args);
+	}
+
+}
+```
+
+La méthode main sera théoriquement là où on écrirait notre code dans un programme Java simple. Mais en l'occurrence, cette dernière contient l’instruction  `SpringApplication.run(HelloWorldApplication.class, args);`. Cette instruction permet de démarrer notre application, et ce n’est pas une bonne pratique d’ajouter autre chose dans la méthode main.
+
+> Oui, mais où met-on notre code, alors ?
+
+Spring Boot fournit une interface nommée “**CommandLineRunner**”. En implémentant cette interface, la classe sera obligée de déclarer la méthode `public void run(String... args) throws Exception`. À partir de là, si la classe est un bean (c’est-à-dire chargée dans le contexte Spring), Spring Boot exécutera la méthode run à l’exécution du programme.
+
+Vous pourriez :
+- soit modifier la classe HelloWorldApplication afin qu’elle implémente CommandLineRunner et la méthode run, avec comme corps de méthode un “System.out.prinln(“Hello World!”)” ;
+- soit créer une nouvelle classe qui implémente CommandLineRunner, la méthode run (même corps de méthode), et qui aura une annotation @Component (au-dessus du nom de la classe).
+
+#### À vous de jouer
+Je vous laisse la main, essayez d’implémenter votre premier HelloWorld !
+
+Pour tester le résultat, si vous utilisez STS via le Boot dashboard, vous pouvez démarrer l’application.
+
+Commencez par builder votre application via Maven :
+- clic droit sur le nom du projet dans Package Explorer ;
+- Run as ;
+- Maven install.
+
+Puis lancez l’application via le Boot dashboard :
+- sous local, sélectionnez votre projet HelloWorld ;
+- cliquez sur la première icône du menu.
+
+Voici une solution que je vous propose :
+```java
+package com.test.helloworld;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class HelloworldApplication implements CommandLineRunner {
+
+	public static void main(String[] args) {
+		SpringApplication.run(HelloworldApplication.class, args);
+	}
+	
+	public void run(String... args) throws Exception{
+		System.out.println("Hello World!");
+	}
+
+}
+```
+
+#### Manipulez les beans
+> Et les packages service et model, à quoi servent-ils ?
+
+Nous ne nous sommes pas servi de ces packages car ils n’étaient pas utiles pour notre premier Hello World, mais ils le seront pour la suite ! À titre d'entraînement et pour vous faire découvrir d’autres notions importantes, je vous propose d’écrire quelques classes supplémentaires :
+- une classe **HelloWorld.java** qui contient un attribut nommé **value** de type **String**. Cette classe fait office d’objet métier, et doit être dans le **package model**. L’attribut value doit contenir **le texte “Hello World!”**. On ajoute également une méthode **toString** à cette classe, qui doit retourner le contenu de l’attribut value ;
+- une classe **BusinessService.java** qui contient une méthode dont le prototype est “**public HelloWorld getHelloWorld()**”. Cette méthode doit instancier un objet HelloWorld, et le retourner. Attention, la classe BusinessService.java doit être déclarée **en tant que bean dans le context Spring**. J’en appelle à votre mémoire : comment fait-on ?! Via une annotation, bien sûr : **@Component** fera l’affaire.
+
+Modifions également du code existant :
+- La classe HelloWorldApplication doit être complétée par un nouvel attribut : “**private BusinessService bs;**”. Ce dernier sera annoté** @Autowired**.
+- Ensuite, la méthode run doit être modifiée afin qu’elle contienne le code suivant :
+```java
+HelloWorld hw = bs.getHelloWorld();
+System.out.println(hw);
+```
+
+Tout d’abord, on récupère un objet HelloWorld grâce au BusinessService, puis on transmet l’objet HelloWord à la méthode System.out.println. Lors de l’exécution de cette dernière, la méthode toString() de l’objet HelloWorld sera appelée, et le texte contenu dans l’attribut value s’affichera.
+
+> Quelque chose m’échappe, l’attribut bs n’est jamais instancié dans ce code ; comment se fait-il qu’on puisse l’utiliser ?
+
+C’est grâce à l’IoC container de Spring ! Rappelez-vous, je vous ai appris dans la première partie le concept de **l’injection de dépendances**. En mettant l’annotation @Autowired sur l’attribut bs, **Spring va chercher au sein de son contexte s’il existe un bean de type BusinessService**. 
+
+✅ S’il le trouve, il va alors instancier la classe de ce bean et **injecter cette instance dans l’attribut**. 
+
+❌ S’il ne trouve pas de bean de ce type, Spring génère une erreur.
+
+Résultat : nul besoin de gérer l’instanciation du BusinessService, Spring s’en occupe pour nous. :-)
+
+#### En résumé
+- Au sein d’une application Spring Boot, écrire du code implique de **définir les beans** utilisés par Spring.
+- On peut exécuter du code grâce à l’implémentation de l’interface **CommandLineRunner** et de la méthode **run**.
+- Pour qu’une classe soit **déclarée en tant que bean**, on l’annote **@Component**.
+- Pour qu’un bean **soit injecté** dans un attribut, on annote l’attribut **@Autowired**.
+
+### 
 
 
 
