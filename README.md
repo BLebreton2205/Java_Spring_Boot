@@ -1,7 +1,7 @@
 # Java_Spring_Boot
 Ceci est l'application de la formation Spring Boot proposer par OpenClassroom : https://openclassrooms.com/fr/courses/6900101-creez-une-application-java-avec-spring-boot
 
-## Identifiez pourquoi et quand utiliser Spring Boot
+## Partie 1 - Identifiez pourquoi et quand utiliser Spring Boot
 ### Explorez les solutions apportées par Spring
 
 Quelle est notre problématique de base ? Construire une application qui :
@@ -277,7 +277,7 @@ Conclusion, exécuter notre projet Spring Boot, quelles que soient ses fonctionn
 - Spring Boot **Actuator** permet de **monitorer** et **gérer** une application **pendant son exécution**.
 - Le déploiement de l’application est facilité par la génération d’un JAR, et pour les projets web, un **tomcat est embarqué**.
 
-## Découvrez les étapes clés de tout projet Spring Boot
+## Partie 2 - Découvrez les étapes clés de tout projet Spring Boot
 
 ### Créez votre projet
 Dans cette partie de cours, nous allons ensemble découvrir les étapes clés pour tout projet Spring Boot. Cette partie est construite comme une sorte de mode d’emploi, auquel vous pouvez vous référer quelle que soit l’application que vous réalisez !
@@ -795,3 +795,47 @@ Analysons :
 - Ligne 27 : grâce à assertEquals, je compare les 2 variables. Si elles sont égales, le test réussit, sinon il échoue.
 
 Allez ! Passons au déploiement !
+
+#### Découvrez les méthodes de déploiement
+Notre objectif est désormais de déployer et ainsi d’exécuter notre application.
+
+> Le déploiement correspond aux étapes qui permettent de passer de l’environnement de développement à l’environnement d’exécution.
+
+L’environnement de développement correspond généralement à notre IDE. Dans le cas de ce cours, on utilise STS.
+
+L'environnement d'exécution peut varier. Il peut s'agit d'un environnement de tests ou d'un environnement de production. Notons que l’environnement de développement peut également être un environnement d’exécution.
+
+> Quel prérequis doit avoir un environnement d’exécution ?
+Je suis sûr que vous connaissez la réponse : tout simplement une JRE, qui permet ainsi l’exécution d’un programme Java.
+
+> Même si c’est une application Spring, la simple JRE suffit ?
+Tout à fait, et c’est une très bonne nouvelle ! Rappelons que parmi les avantages de Spring Boot, il y a sa facilité de déploiement car le JAR qui résulte de la compilation embarque tout.
+
+Par exemple, même le serveur Tomcat qui permet d’exécuter une application web est embarqué. Nul besoin d’installer un serveur Tomcat, il est déjà là !
+
+Récapitulons les méthodes employées :
+- À travers l’**IDE** avec “Run As”, “Spring Boot App”.
+- Avec **le goal Maven** `spring-boot:run`.
+- **En exécutant le JAR** grâce à la commande `java -jar`.
+
+Nous sommes bien d’accord, le résultat est le même ! Gardons à l’esprit que dans un contexte professionnel, on livrera généralement un JAR, et c’est ce dernier qui sera exécuté.
+
+Les méthodes de déploiement et d’exécution via l’IDE et Maven sont surtout utiles pour les développeurs.
+
+#### En résumé
+- Spring Boot fournit une **annotation @SpringBootTest qui permet de charger le contexte Spring** lors de l’exécution des tests.
+- Déployer une application Spring Boot est très facile, car l’artefact qui en résulte est un **simple JAR** où tout est embarqué.
+- Il existe plusieurs méthodes pour exécuter notre application Spring Boot :
+    - Via l’IDE directement.
+    - Grâce à Maven et au goal spring-boot:run.
+    - En exécutant la commande java -jar.
+
+## Partie 3 - Créez une API avec Spring Boot
+
+
+
+
+
+
+
+
