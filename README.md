@@ -1198,13 +1198,116 @@ Bonne question, c’est là où les autres annotations vont vous aider :
 
 Nous avons ici tout le nécessaire pour implémenter la création d’un nouvel employé ou sa suppression, par exemple. Je ne vais pas tout vous montrer dans le détail, car ce cours n’en finirait plus, sinon. 
 
-Je vous ai tout de même mis à disposition ce repository avec toutes les actions implémentées : par ici. Allons maintenant vérifier si notre implémentation est valide !
+Je vous ai tout de même mis à disposition ce repository avec toutes les actions implémentées : [par ici](https://github.com/OpenClassrooms-Student-Center/HR-Association/tree/master/api). Allons maintenant vérifier si notre implémentation est valide !
 
 #### En résumé
 - Notre entité du model est modélisée, et @Entity est l’annotation obligatoire !
 - La communication aux données s’effectue via une classe annotée @Repository.
 - La classe annotée @Service se charge des traitements métiers.
 - Nos controllers @RestController nous permettent de définir des URL et le code à exécuter quand ces dernières sont requêtées.
+
+### Testez votre API avec Spring Boot
+Ce chapitre apportera une conclusion à cette partie de cours. Notre objectif est de tester les controllers ; or, ces derniers seront appelés à travers des URL par les programmes qui communiqueront avec.
+
+La question est donc : comment simuler un appel de ce genre ?
+
+C’est là où Spring Boot entre une nouvelle fois en jeu : il nous permet d’exécuter des requêtes sur notre controller. La clé de tout cela est l’annotation **@WebMvcTest**. Je vous propose de passer à l’action !
+#### Rédigez des tests unitaires avec @WebMvcTest
+Je ne vais pas vous abandonner à votre sort pour cette grande première avec les tests et Spring Boot. Laissez-moi vous guider.
+
+Commencez par observer le code suivant :
+```java
+package com.test.api;
+
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import com.test.api.controller.EmployeeController;
+import com.test.api.service.EmployeeService;
+
+@WebMvcTest(controllers = EmployeeController.class)
+public class EmployeeControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private EmployeeService employeeService;
+
+    @Test
+    public void testGetEmployees() throws Exception {
+        mockMvc.perform(get("/employees"))
+            .andExpect(status().isOk());
+    }
+
+}
+```
+
+Quelques explications :
+- **@WebMvcTest(controllers = EmployeeController.class)** déclenche le mécanisme permettant de tester les controllers. On indique également le ou les controllers concernés.
+- L’attribut **mockMvc** est un autre élément important. Il permet d’appeler la méthode “perform” qui déclenche la requête.
+- L’attribut employeeService est annoté **@MockBean**. Il est obligatoire, car la méthode du controller exécutée par l’appel de “/employees” utilise cette classe.
+
+> Encore une fois, je vous redirige vers le cours sur [les tests](https://openclassrooms.com/fr/courses/6100311-testez-votre-code-java-pour-realiser-des-applications-de-qualite) si la notion de mock vous échappe. Pour rappel, un mock est un objet qui se substitue à un autre objet.
+- La méthode perform prend en paramètre l’instruction **get(“/employees”)**. On exécute donc une requête GET sur l’URL /employees.
+- Ensuite, l’instruction **.andExpect(status().isOk())** indique que nous attendons une réponse HTTP 200. 
+
+L’utilisation de @WebMvcTest permet d’écrire des **tests unitaires** sur le controller. Autrement dit, on vérifie uniquement le code exécuté dans la méthode du controller en mockant les appels au service.
+
+#### Rédigez des tests d’intégration avec @SpringBootTest
+Pour écrire des **tests d’intégration**, on peut utiliser l’annotation @SpringBootTest que je vous ai déjà présentée.
+
+> Rappelons que les tests unitaires ont pour vocation à tester uniquement le contenu d’une méthode, alors que les tests d’intégration impliquent de tester plus largement une fonctionnalité.
+
+```java
+package com.test.api;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.servlet.MockMvc;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+public class EmployeeControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    public void testGetEmployees() throws Exception {
+        mockMvc.perform(get("/employees"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].firstName", is("Laurent")));
+    }
+
+}
+```
+
+Le code est très similaire, mais les différences sont les suivantes :
+- Les annotations **@SpringBootTest** et **@AutoConfigureMockMvc** permettent de charger le contexte Spring et de réaliser des requêtes sur le controller.
+- L’attribut annoté @MockBean a disparu, plus besoin d’un mock pour EmployeeService, car ce dernier a été injecté grâce à @SpringBootTest.
+- En plus de vérifier si le statut vaut 200, on vérifie le contenu retourné grâce à `jsonPath("$[0].firstName", is("Laurent"))`. 
+    - $ pointe sur la racine de la structure JSON.
+    - [0] indique qu’on veut vérifier le premier élément de la liste.
+    - firstName désigne l’attribut qu’on veut consulter.
+- is(“Laurent”) est ce que l’on attend comme résultat.
+
+Pour finir ce chapitre pour le moins riche, je vous demande de déployer votre projet. Je vous laisse réaliser cette tâche qui n’a rien de différent par rapport à ce que vous avez déjà fait dans la partie 2 de ce cours. 
 
 
 
