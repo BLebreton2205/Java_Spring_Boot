@@ -885,5 +885,99 @@ Quelques explications :
     - **H2 Database** : comme on dit, “C'est comme le Port-Salut, c'est écrit dessus” ; on veut faire du H2, alors on prend cette dépendance.
     - **Spring Data JPA** : permet de gérer la persistance des données avec la base de données ; peut-être le plus difficile à identifier pour vous si vous n’avez jamais fait de persistance de données avec Spring.
 
+#### En résumé 
+- Pour implémenter une API qui communique avec une base de données, 3 éléments sont essentiels :
+    - Le starter web qui permettra d’exposer les endpoints.
+    - Un starter pour gérer la persistance des données (comme Spring Data JPA).
+    - La dépendance pour le driver de la base de données concernée (par ex. H2 Database ou MySQL Driver).
+
+### Configurez et structurez votre API avec des packages
+Notre structure minimale étant prête, il nous faut désormais :
+- Structurer avec des packages, comme nous l’avons vu dans la partie 2.
+- Configurer notre application. Vous allez pouvoir vous plonger dans la configuration de la base de données H2.
+
+#### À vous de jouer !
+Je vous propose de passer à l’action : à vous de structurer et de configurer l’application.
+
+> Comment faire pour configurer l’accès à la base de données?
+
+Pour configurer la **base de données H2**, il existe plusieurs méthodes possibles, que vous pourrez découvrir grâce à une simple recherche sur le Web.
+
+Cependant, je vous encourage à laisser le **comportement par défaut** qui implique du coup zéro configuration (partisans du moindre effort, bonjour ! ), et à ajouter uniquement la **propriété pour activer la console** de visualisation de la base de données (je vous laisse chercher sur le Web ).
+
+> Comment faire pour insérer des données dans la base de données ?
+
+Au-delà de la configuration de H2, il s’agit aussi de fournir la structure de la base de données et des données. Pour vous aider, voici un fichier nommé [data.sql](https://github.com/OpenClassrooms-Student-Center/HR-Association/blob/master/api/src/main/resources/data.sql) qui contient la structure qui sera utilisée, ainsi que quelques données. 
+
+Il s’agit d’une **unique table nommée Employees, avec 5 colonnes**. Ce fichier est à placer dans le répertoire **src/main/resources**. 
+
+Et rappelez-vous la puissance de Spring Boot : il sera pris en compte automatiquement sans que vous ayez quoi que ce soit à faire ! De ce fait, **le script SQL sera exécuté au démarrage de l’application**, et votre base de données contiendra la table et les données.
+
+Vous connaissez désormais la musique, on se retrouve juste en dessous pour une correction !
+
+#### Correction
+##### Créez des packages
+Certainement le plus facile de cet exercice, voici tout simplement le résultat avec une capture d’écran :
+<!-- insérer image -->
+
+##### Définissez les propriétés
+Maintenant, parlons des propriétés et donc du fichier applications.properties : avez-vous repris les propriétés vues dans la partie 2 ? Avez-vous trouvé la propriété pour activer la console H2 ?
+
+Et voici mon résultat :
+```java
+#Global configuration
+spring.application.name=api
+
+#Tomcat configuration
+server.port=9000
+
+#Log level configuration
+logging.level.root=ERROR
+logging.level.com.test=INFO
+logging.level.org.springframework.boot.autoconfigure.h2=INFO
+logging.level.org.springframework.boot.web.embedded.tomcat=INFO
+
+#H2 Configuration
+spring.h2.console.enabled=true
+```
+
+- spring.application.name=api : pour définir un nom à l’application ;
+- server.port=9000 : pour ne pas être sur le port par défaut 8080 ;
+- logging.level :
+    - root=ERROR : par défaut, seules les traces en ERROR s’affichent. L’idée est simple : réduire les affichages dans la console de toutes les "3rd party",
+    - com.openclassrooms=INFO : pour ce qui est de notre code, on est en INFO pour avoir du détail,
+    - org.springframework.boot.autoconfigure.h2=INFO : permet de voir dans la console l’URL jdbc de la base H2,
+    - org.springframework.boot.web.embedded.tomcat : permet de voir dans la console le port utilisé par Tomcat au démarrage ;
+- spring.h2.console.enabled=true : correspond à la propriété pour activité de la console H2. 
+
+Concernant la console H2, une fois l’application démarrée, vous pouvez aller sur l’URL “http://localhost:9000/h2-console”. Une fenêtre de login s’ouvre, et il est nécessaire d’indiquer l’**URL Jdbc** (qui change à chaque démarrage de l’application).
+
+Dans votre console, vous aurez une ligne qui doit ressembler à la suivante :
+
+`H2 console available at '/h2-console'. Database available at 'jdbc:h2:mem:9c5afa97-0c51-4c33-8578-c2872e4d2a25'` 
+
+Récupérez l’URL JDBC (en l'occurrence jdbc:h2:mem:9c5afa97-0c51-4c33-8578-c2872e4d2a25'), saisissez dans le formulaire comme ci-dessous, puis “Connect”. Le username par défaut est bien “sa”, et le password par défaut est vide.
+
+Une fois connecté, vous pouvez consulter le contenu de votre table.
+
+Nous voilà prêts pour la 3e étape : la structure de packages est créée, la configuration est en place, et la base de données est fonctionnelle !
+
+C’est l’heure d’écrire le code !
+
+> Envie de découvrir la configuration pour une base de données MySQL ? Je vous invite à lire la [documentation de Spring](https://spring.io/guides/gs/accessing-data-mysql/) (en anglais), notamment la section "Create the application.properties File".
+
+#### En résumé
+- Les besoins techniques du projet vont influer sur votre configuration.
+- La structure des packages reste le standard : controller / service / repository / model.
+- Grâce à Spring Boot, la mise en œuvre de la base de données requiert 0 ligne de configuration, si ce n’est pour activer la console H2.
+
+
+
+
+
+
+
+
+
 
 
