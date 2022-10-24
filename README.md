@@ -971,12 +971,240 @@ C’est l’heure d’écrire le code !
 - La structure des packages reste le standard : controller / service / repository / model.
 - Grâce à Spring Boot, la mise en œuvre de la base de données requiert 0 ligne de configuration, si ce n’est pour activer la console H2.
 
+### Créez un contrôleur REST pour gérer vos données
+Dans ce chapitre, oublions le mode exercice/correction, je ne veux pas vous faire chercher des heures et des heures si vous n’avez jamais eu l’occasion de développer une API REST avec Spring. Je vous propose donc de vous montrer **pas à pas comment arriver au résultat final**, et je vous invite à appliquer les étapes en même temps que moi.
 
+#### Modélisez la table en entité Java
+Première chose à faire, afin de manipuler les données persistées dans la base de données, nous allons créer une classe Java qui est une entité. Cela signifie que **la classe représente la table**. Chaque ligne de la table correspondra à une instance de la classe. Créons la classe **Employee** dans le package com.openclassrooms.api.model.
 
+Voici la classe en question :
+```java
+package com.test.api.model;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
+import lombok.Data;
 
+@Data
+@Entity
+@Table(name = "employees")
+public class Employee {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name="first_name")
+    private String firstName;
+
+    @Column(name="last_name")
+    private String lastName;
+
+    private String mail;
+
+    private String password;
+
+}
+```
+Arrêtons-nous sur ses spécificités :
+- @Data est une annotation Lombok. Nul besoin d’ajouter les getters et les setters. La librairie Lombok s’en charge pour nous. Très utile pour alléger le code.
+- @Entity est une annotation qui indique que la classe correspond à une table de la base de données.
+- @Table(name=”employees”) indique le nom de la table associée.
+- L’attribut id correspond à la clé primaire de la table, et est donc annoté @Id. D’autre part, comme l’id est auto-incrémenté, j’ai ajouté l’annotation @GeneratedValue(strategy = GenerationType.IDENTITY).
+- Enfin, firstName et lastName sont annotés avec @Column pour faire le lien avec le nom du champ de la table.
+
+> Je n’ai pas eu besoin de mettre cette annotation pour mail et password, car le nom du champ de la table est identique.
+
+#### Implémentez la communication entre l’application et la base de données
+Une fois que l’entité est créée, nous devons implémenter le code qui déclenche les actions pour communiquer avec la base de données. Bien évidemment, ce code se servira de notre classe entité.
+
+Le principe est simple, notre code fait une requête à la base de données, et le résultat nous est retourné sous forme d’instances de l’objet Employee.
+
+> Quel est ce code à implémenter ?
+
+**Une interface !**
+
+> Mais une interface ne contient pas de code, comment peut-elle exécuter des requêtes ?
+
+C’est là toute la puissance du **composant Spring Data JPA** ! Il nous permet d’exécuter des requêtes SQL, sans avoir besoin de les écrire.
+
+Dans le package com.test.api.repository, créez une **interface** nommée **EmployeeRepository**. Le code sera le suivant :
+```java
+package com.test.api.repository;
+
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
+
+import com.test.api.model.Employee;
+
+@Repository
+public interface EmployeeRepository extends CrudRepository<Employee, Long> {
+
+}
+```
+
+Comme à notre habitude, expliquons : @Repository est une annotation Spring pour indiquer que la classe est un bean, et que son rôle est de communiquer avec une source de données (en l'occurrence la base de données).
+> En réalité, **@Repository** est une spécialisation de **@Component**. Tout comme @Component, elle permet de déclarer auprès de Spring qu’une classe est un bean à exploiter. Par son nom, on fournit au développeur une indication sémantique sur le rôle de la classe. Vous pourriez cependant utiliser l’annotation @Component, et cela fonctionnerait très bien, mais il est recommandé d’utiliser les annotations qui offrent cette valeur sémantique supplémentaire.
+
+CrudRepository est une interface fournie par Spring. Elle fournit des méthodes pour manipuler votre entité. Elle utilise la généricité pour que son code soit applicable à n’importe quelle entité, d’où la syntaxe “CrudRepository**<Employee, Long>**” (je ne vous fais pas un cours sur la généricité, cela fait partie de vos acquis de développeur Java )
+
+> La classe entité fournie doit être annotée @Entity, sinon Spring retournera une erreur.
+
+Ainsi, vous pouvez utiliser les méthodes définies par l’interface CrudRepository. Pour en avoir la liste complète, rendez-vous sur la [documentation](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html). Je vous en dis plus dans la partie qui suit !
+
+Et… c’est tout ! Génial, non ? Une dizaine de lignes de code uniquement pour cette étape.
+
+#### Créez un service métier
+Si nous analysons la structure créée, nous avons tiré profit des couches model et repository, mais rien n’a été fait dans les autres couches. Il reste donc “service” et “controller” à implémenter.
+
+La couche “service” est dédiée au “**métier**”. C’est-à-dire appliquer des traitements dictés par les règles fonctionnelles de l’application. Imaginez par exemple que votre application doive sauvegarder tous les noms des employés en majuscules, mais que le nom nous arrive en minuscules.
+
+À quel endroit de notre code allons-nous effectuer l’opération de mise en majuscules ? Vous l’avez compris, dans la couche “métier”.
+
+Allez, j’en profite pour vous faire un récapitulatif de l’objectif de chaque couche :
+
+| **Couche** | **Objectif**                                  |
+| ---------- | --------------------------------------------- |
+| controller | Réceptionner la requête et fournir la réponse |
+| service    | Exécuter les traitements métiers              |
+| repository | Communiquer avec la source de données         |
+| model      | Contenir les objets métiers                   |
+
+Ainsi, lorsqu’une requête est réceptionnée, la couche controller délègue les traitements métiers à exécuter. La couche service pourra ensuite faire appel à la couche repository.
+
+> Et quels sont nos traitements métiers ?
+
+Eh bien pour l’instant, on n'en a pas.  Cependant, la couche service est également un pont entre le controller et le repository. De ce fait, nous allons créer une classe EmployeeService dont voici le code :
+```java
+package com.test.api.service;
+
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import com.test.api.model.Employee;
+import com.test.api.repository.EmployeeRepository;
+
+import lombok.Data;
+
+@Data
+@Service
+public class EmployeeService {
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
+    public Optional<Employee> getEmployee(final Long id) {
+        return employeeRepository.findById(id);
+    }
+
+    public Iterable<Employee> getEmployees() {
+        return employeeRepository.findAll();
+    }
+
+    public void deleteEmployee(final Long id) {
+        employeeRepository.deleteById(id);
+    }
+
+    public Employee saveEmployee(Employee employee) {
+        Employee savedEmployee = employeeRepository.save(employee);
+        return savedEmployee;
+    }
+
+}
+```
+
+Vous noterez avec intérêt que chaque méthode a pour unique objectif d’appeler une méthode de l'employeeRepository.
+
+Un petit zoom sur l’annotation **@Service** : tout comme l’annotation @Repository, c’est une **spécialisation de @Component**. Son rôle est donc le même, mais son nom a une valeur sémantique pour ceux qui lisent votre code. Pour le reste, ce code devrait être à votre portée.
+
+Passons maintenant à la couche controller !
+
+#### Exposez les endpoints REST
+Nous arrivons à la dernière étape. Nous sommes en train de développer une API, c’est-à-dire une application qui va communiquer avec d’autres applications. Pour rendre cela possible, il est obligatoire de fournir aux applications qui voudront communiquer avec nous un **moyen** de le faire. 
+
+> Notre application est comme une maison. Si on n'y met aucune porte, impossible d’y accéder ! Les portes de notre application sont ce qu’on appelle des **endpoints**. Un endpoint est associé à une URL. Lorsqu'on appelle cette URL, on reçoit une réponse, et cet échange se fait en **HTTP**.
+
+De plus, on va suivre le modèle **REST** (par exemple pour le format des URL). 
+
+> Comment créer ces fameux endpoints ? Comment l'associer à une URL ? Dois-je écrire des réponses HTTP ? Comment suivre le modèle REST ? 
+
+Souvenez-vous que l’un des avantages de Spring et Spring Boot est de vous fournir les composants logiciels qui vous évitent de faire du code complexe ! Le starter “spring-boot-starter-web” nous fournit justement tout le nécessaire pour créer un endpoint. Laissez-moi vous donner la recette. Il faut :
+- une classe Java annotée **@RestController** ;
+- que les méthodes de la classe soient annotées. Chaque méthode annotée devient alors un endpoint grâce aux annotations **@GetMapping**, **@PostMapping**, **@PatchMapping**, **@PutMapping**, **@DeleteMapping**, **@RequestMapping**.
+
+Et… c’est tout ! Encore une fois, la simplicité est de rigueur. Regardons cela en code :
+
+```java
+package com.test.api.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.test.api.model.Employee;
+import com.test.api.service.EmployeeService;
+
+@RestController
+public class EmployeeController {
+
+    @Autowired
+    private EmployeeService employeeService;
+
+    /**
+    * Read - Get all employees
+    * @return - An Iterable object of Employee full filled
+    */
+    @GetMapping("/employees")
+    public Iterable<Employee> getEmployees() {
+        return employeeService.getEmployees();
+    }
+
+}
+```
+
+C’est l’heure des explications !
+
+Premièrement, @RestController atteint 2 objectifs :
+1. Comme @Component, elle permet d’indiquer à Spring que cette classe est un bean.
+2. Elle indique à Spring d’**insérer le retour de la méthode au format JSON dans le corps de la réponse HTTP**. Grâce à ce deuxième point, les applications qui vont communiquer avec votre API accéderont au résultat de leur requête en p**arsant la réponse HTTP**.
+
+Deuxièmement, j’ai injecté une instance d'EmployeeService. Cela permettra d’appeler les méthodes pour communiquer avec la base de données.
+
+Troisièmement, j’ai créé une méthode getEmployees() annotée @GetMapping(“/employees”).
+
+Cela signifie que **les requêtes HTTP de type GET à l’URL /employees** exécuteront le code de cette méthode. Et ce code est tout simple : il s’agit d’appeler la méthode getEmployees() du service, ce dernier appellera la méthode findAll() du repository, et nous obtiendrons ainsi tous les employés enregistrés en base de données.
+
+> C'est tout ?
+
+Eh oui, c’est tout.  Il est vrai que je vous ai fait implémenter le cas le plus simple. Mais notez comment Spring Boot fait tout dans l’ombre pour vous, vous ne vous êtes pas préoccupé de la conversion de votre code Java en JSON, ni de comment réceptionner une requête HTTP, et encore moins de comment écrire une réponse HTTP !
+
+> Et si on veut ajouter un nouvel employé ? Ou supprimer un employé ?
+
+Bonne question, c’est là où les autres annotations vont vous aider :
+| **Annotation**  | **Type HTTP** | **Objectif**                                                 |
+| --------------- | ------------- | ------------------------------------------------------------ |
+| @GetMapping     | GET           | Pour la **lecture** de données.                              |
+| @PostMapping    | POST          | Pour **l’envoi** de données. Cela sera utilisé par exemple pour créer un nouvel élément. |
+| @PatchMapping   | PATCH         | Pour **la mise à jour partielle** de l’élément envoyé.       |
+| @PutMapping     | PUT           | Pour **le remplacement complet** de l’élément envoyé.        |
+| @DeleteMapping  | DELETE        | Pour la **suppression** de l’élément envoyé.                 |
+| @RequestMapping |               | Intègre tous les types HTTP. Le type souhaité est indiqué comme attribut de l’annotation. Exemple :<br />@RequestMapping(method = RequestMethod.GET) |
+
+Nous avons ici tout le nécessaire pour implémenter la création d’un nouvel employé ou sa suppression, par exemple. Je ne vais pas tout vous montrer dans le détail, car ce cours n’en finirait plus, sinon. 
+
+Je vous ai tout de même mis à disposition ce repository avec toutes les actions implémentées : par ici. Allons maintenant vérifier si notre implémentation est valide !
+
+#### En résumé
+- Notre entité du model est modélisée, et @Entity est l’annotation obligatoire !
+- La communication aux données s’effectue via une classe annotée @Repository.
+- La classe annotée @Service se charge des traitements métiers.
+- Nos controllers @RestController nous permettent de définir des URL et le code à exécuter quand ces dernières sont requêtées.
 
 
 
