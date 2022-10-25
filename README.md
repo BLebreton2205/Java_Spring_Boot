@@ -1500,10 +1500,545 @@ public class WebappApplication implements CommandLineRunner {
 - Le fichier **application.properties** est ma source de propriétés.
 - Je peux créer des propriétés et les manipuler dans mon code, notamment grâce à l’annotation **@ConfigurationProperties**.
 
+### Écrivez votre code 
+#### Modélisez l’objet Employee
+L’objectif du code de ce projet sera de :
+1. Communiquer avec l’API REST pour récupérer ou modifier les données des employés.
+2. Appliquer des traitements métiers spécifiques à l’application web.
+3. Afficher les pages web permettant de lister les employés, créer un nouvel employé, modifier un employé existant et supprimer un employé existant.
 
+Les bonnes pratiques de programmation nous amènent à avoir une approche MVC pour ce type d’application : Modèle - Vue - Contrôleur.
+[Modèle MVC](./readMeIMG/mvc.png)
 
+En quelques mots, on découpe notre code en 2 pôles : le code “Modèle” permet de décrire les données, le code “Vue” permet d’afficher les données ; le code “Contrôleur” traite les requêtes en interrogeant le “Modèle” et en demandant à la “Vue” de s’afficher. Si on reprend le schéma, voici donc les étapes :
+1. Le contrôleur reçoit une demande d'un utilisateur, envoyée depuis le navigateur.
+2. Le contrôleur demande les données au modèle.
+3. Le contrôleur transmet les données à la vue.
+4. La vue affiche le résultat sur le navigateur.
 
+> Pour en savoir plus, vous pouvez consulter le cours [Écrivez du code maintenable](https://openclassrooms.com/fr/courses/6810956-ecrivez-du-code-java-maintenable).
 
+Pour suivre ce principe de programmation, nous devons identifier la ou les données que nous manipulons. En l'occurrence, la donnée que nous manipulons est un employé ! 
 
+D’ailleurs, une observation du code de l’API nous confirme cela : la classe `com.test.api.controller.EmployeeController` contient des méthodes dont le type retour est un objet `Employee` ou bien `Iterable<Employee>`.
 
+#### À vous de jouer 
+À vous de jouer, écrivez une classe Java de type POJO qui modélise un employé.
 
+```java
+package com.test.webapp.model;
+
+import lombok.Data;
+
+@Data
+public class Employee {
+
+    private Long id;
+
+    private String firstName;
+
+    private String lastName;
+
+    private String mail;
+
+    private String password;
+}
+```
+
+Quelle simplicité, n’est-ce pas ?!
+
+Je me suis inspiré de la classe com.openclassrooms.api.model.Employee. J’ai donc mes 5 attributs mis à disposition par l’API :
+- id ;
+- firstName ;
+- lastName ;
+- mail ;
+- password.
+
+L’annotation `@Data` permet de générer automatiquement les getters et setters pour chaque attribut.
+
+> Ce n’est pas une règle absolue d’avoir l’objet similaire entre la webapp et l’API. On pourrait avoir un objet partiel côté webapp (sans password par exemple, pour éviter que cette donnée soit côté web).
+
+Notre classe Employee étant prête, on peut s’intéresser à la communication entre l’application web et l’API.
+
+#### Implémentez la communication entre l’application web et l’API REST
+Pour ceux qui ont suivi la partie 3 de ce cours, vous avez certainement à l’esprit que la couche “repository” a permis de communiquer avec la base de données. Dans cette situation, la base de données correspondait à **notre source de données**.
+
+Mais pour l’application web, quelle est la source de ces données ? Le contexte de cette application vous l’a fait comprendre, c’est bien évidemment l’**API** !
+
+Résultat, notre objectif va être de faire communiquer l’application web avec l’API REST.
+
+> Comment réussir ?
+
+Le starter Spring Web nous fournit tout le code nécessaire pour cela (décidément, Spring Boot ne nous déçoit jamais ! ). Nous allons nous servir de la classe **RestTemplate**.
+
+> Suite à l’avènement de la programmation réactive, l’utilisation de l’objet RestTemplate va progressivement être remplacée par l’utilisation des classes du module Spring Webflux. Ainsi, vous trouverez sur le Web des notices “Deprecated” pour RestTemplate. Pas de panique, RestTemplate reste une façon valide de communiquer avec une API en synchrone, et c’est très bien pour nous débutants. Laissons la programmation réactive de côté pour le moment.
+
+Vous ne pouvez pas deviner l’utilisation de RestTemplate, et je n’ai pas envie que vous passiez des heures à chercher ; alors laissez-moi vous montrer directement comment nous en servir :
+```java
+package com.test.webapp.repository;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+import com.test.webapp.CustomProperties;
+import com.test.webapp.model.Employee;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Component
+public class EmployeeProxy {
+
+    @Autowired
+    private CustomProperties props;
+
+    /**
+    * Get all employees
+    * @return An iterable of all employees
+    */
+
+    public Iterable<Employee> getEmployees() {
+        String baseApiUrl = props.getApiUrl();
+        String getEmployeesUrl = baseApiUrl + "/employees";
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<Iterable<Employee>> response = restTemplate.exchange(
+                getEmployeesUrl,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<Iterable<Employee>>() {}
+                );
+
+        log.debug("Get Employees call " + response.getStatusCode().toString());
+        
+        return response.getBody();
+    }
+
+}
+```
+
+Le concept est le suivant : RestTemplate permet d’exécuter une requête HTTP. On a donc besoin de fournir l’URL, le type de requête (GET, POST, etc.), et pour finir le type d’objet qui sera retourné.
+
+Ce dernier point est très important, RestTemplate non seulement fait la requête à l’API mais en plus **convertit le résultat JSON en objet Java** et ça, c’est top pour nous !
+
+Si on détaille le code, voici les explications :
+- Ligne 28 : grâce à notre objet CustomProperties, on récupère l’URL de l’API.
+- Ligne 29 : on complète l’URL de l’API par le path de l'endpoint à joindre.
+- Ligne 31 : on instancie notre objet RestTemplate.
+- Ligne 32 : on appelle la méthode exchange en transmettant :
+    - l’URL ;
+    - la méthode HTTP (grâce à l’enum HttpMethod) ;
+    - Null en lieu et place d’un objet HttpEntity, ainsi on laisse un comportement par défaut ;
+    - le type retour, ici je suis obligé d’utiliser un objet ParameterizedTypeReference car /employees renvoie un objet Iterable<Employee>. Mais si l’endpoint renvoie un objet simple, alors il suffira d’indiquer <Object>.class. 
+- Ligne 41 : on récupère notre objet Iterable<Employee> grâce à la méthode getBody() de l’objet Response.
+
+Vous pouvez tester ce code et constater la bonne récupération des données (n’oubliez pas de démarrer l’API avant) !
+
+> Très bien, mais comment faire si on souhaite également fournir une donnée ? Par exemple, si je veux créer un employé, comment faire pour envoyer à l'API les informations du nouvel employé ?
+
+Le code sera très similaire :
+```java
+public Employee createEmployee(Employee e) {
+    String baseApiUrl = props.getApiUrl();
+    String createEmployeeUrl = baseApiUrl + "/employee";
+
+    RestTemplate restTemplate = new RestTemplate();
+    HttpEntity<Employee> request = new HttpEntity<Employee>(e);
+    ResponseEntity<Employee> response = restTemplate.exchange(
+        createEmployeeUrl,
+        HttpMethod.POST,
+        request,
+        Employee.class);
+
+    log.debug("Create Employee call " + response.getStatusCode().toString());
+
+    return response.getBody();
+}
+```
+
+On retrouve notre objet **RestTemplate** et on fournit toujours l’URL, la méthode HTTP (cette fois POST) et le type retour (en l’occurrence Employee.class).
+
+La grande différence correspond au nouvel objet **HttpEntity** qui, comme vous le constatez, a été instancié avec **en paramètre du constructeur l’objet Employee** (nommé e). 
+
+Je transmets ensuite cet objet HttpEntity comme 3e paramètre de la méthode exchange (ce paramètre que nous avions mis à null précédemment).
+
+Le tour est joué !
+
+> Sur le repository GitHub correspondant au résultat de cette partie, vous trouverez le code pour les actions create, update et delete.
+
+#### Créez un service métier
+Le couche service a un double objectif :
+- Exécuter les traitements métiers.
+- Faire le relais vers la couche repository.
+
+Souvenez-vous de ce tableau, partagé dans un précédent chapitre :
+| **Couche** | **Objectif**                                  |
+| ---------- | --------------------------------------------- |
+| controller | Réceptionner la requête et fournir la réponse |
+| service    | Exécuter les traitements métiers              |
+| repository | Communiquer avec la source de données         |
+| model      | Contenir les objets métiers                   |
+
+Nous avons réalisé les couches model et repository, et la couche service est la suivante. Maintenant que nous avons contextualisé notre tâche, mettons-nous au travail.
+
+Nous allons créer une classe nommée **EmployeeService** dans le package com.openclassrooms.webapp.service.
+
+Bien évidemment, cette classe devra être identifiée comme étant un **bean**. L’annotation utilisée sera **@Service**, qui est une spécialisation de l’annotation @Component que vous connaissez déjà.
+
+En ce qui concerne le contenu de la classe, nous allons écrire des méthodes qui correspondront aux services mis à disposition. Vu que nous restons dans la dynamique du CRUD, voilà un résultat possible :
+```java
+package com.test.webapp.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.test.webapp.model.Employee;
+import com.test.webapp.repository.EmployeeProxy;
+
+import lombok.Data;
+
+@Data
+@Service
+public class EmployeeService {
+
+    @Autowired
+    private EmployeeProxy employeeProxy;
+
+    public Employee getEmployee(final int id) {
+        return employeeProxy.getEmployee(id);
+    }
+
+    public Iterable<Employee> getEmployees() {
+        return employeeProxy.getEmployees();
+    }
+
+    public void deleteEmployee(final int id) {
+        employeeProxy.deleteEmployee(id);;
+    }
+
+     public Employee saveEmployee(Employee employee) {
+        Employee savedEmployee;
+
+        // Règle de gestion : Le nom de famille doit être mis en majuscule.
+        employee.setLastName(employee.getLastName().toUpperCase());
+
+        if(employee.getId() == null) {
+            // Si l'id est nul, alors c'est un nouvel employé.
+            savedEmployee = employeeProxy.createEmployee(employee);
+        } else {
+            savedEmployee = employeeProxy.updateEmployee(employee);
+        }
+    
+        return savedEmployee;
+    }
+
+}
+```
+
+Bien que cette classe ne soit pas complexe, analysons les points clés :
+- Ligne 12 : annotation @Service, point clé comme expliqué précédemment.
+- Lignes 15/16 : l’objet EmployeeProxy est injecté, ainsi cette classe pourra faire appel à la source de données à travers le proxy.
+- Les méthodes getEmployees(), getEmployee(final int id), deleteEmployee(final int id) sont de simples relais.
+- Lignes 30 à 44 : je vous ai simulé un traitement métier pour vous montrer la pertinence de cette couche. En l'occurrence, on met en majuscules le nom de famille. Cette règle de gestion est dictée par un besoin fonctionnel, et c’est l’endroit parfait pour modifier notre objet avant qu’il ne soit sauvegardé en base de données.
+
+Je ne m’étends pas plus sur cette partie du code, qui revêtira toute son importance en fonction de la complexité fonctionnelle des applications que vous implémenterez.
+
+#### Renvoyez les pages HTML
+Au début de ce chapitre, je vous ai parlé de l’approche **MVC**. Pour suivre cette approche, nous avons besoin de nous pencher sur la séparation entre le c**ode “contrôleur”** (traiter les requêtes entrantes) et le **code “vue”** (construction du résultat visuel à fournir à l’utilisateur).
+
+> Comment renvoyer des pages HTML avec Spring Boot ?
+
+C’est la question à laquelle nous allons maintenant répondre !
+
+Lors du choix des starters, nous avons bien évidemment sélectionné **Spring Web**, mais également le moteur de template **Thymeleaf**. 
+
+Il nous faut apprendre à :
+- Utiliser Spring Web pour traiter une requête qui nous parvient.
+- Utiliser Spring Web pour renvoyer une réponse HTML.
+- Formater notre réponse HTML avec Thymeleaf.
+
+Vous vous en doutez, Spring Boot va encore entrer en action pour nous simplifier la tâche.
+
+Quel est notre point de départ ?
+
+Un utilisateur va utiliser son navigateur web pour visualiser une page web de notre application. Pour cela, l’utilisateur saisit une URL.
+
+Notre application web doit donc déclencher un traitement différent en fonction de l’URL saisie (par exemple, un appel à l’URL http://www.monsite.com/ doit afficher la page d’accueil, tandis qu’un appel à http://www.monsite.com/contact doit afficher la page de contact).
+
+C’est ici que les classes de type ‘controller’ vont entrer en jeu. Pour chaque URL, nous allons pouvoir implémenter une méthode qui contiendra le code à exécuter.
+
+Ces méthodes devront :
+1. Récupérer les données en entrée (s’il y en a).
+2. Faire appel aux traitements métiers (en l'occurrence, communiquer avec la couche service).
+
+Retourner une vue HTML.
+
+Mais attention, pour qu’une méthode d’un ‘controller’ puisse retourner une page HTML, il faut que cette dernière existe.
+
+> Mais où écrire notre code HTML ? Pas dans des classes Java, tout de même ?
+
+Vous avez raison, pas dans une classe Java ! Nous allons écrire le HTML dans des **fichiers .html** que l’on nomme également les **templates**. Et Spring Boot avait tout prévu, regardez de plus près votre structure de projet :
+
+Il y a ici un répertoire **Templates** qui a pour vocation à contenir vos fichiers HTML. Voici les étapes à suivre :
+- Ajoutons un fichier **home.html** qui servira de page d’accueil. Je reviendrai sur ce fichier un peu après. Notez que cela correspond à écrire le code ‘Vue’ de notre concept MVC.
+- Créons une classe nommée **EmployeeController** dans le package controller.
+- Annotons la classe EmployeeController afin qu’elle soit détectée comme un bean, en utilisant l’annotation **@Controller**. De nouveau c’est une spécialisation de @Component.
+
+Je vous ai indiqué précédemment que lors de l’appel d’une URL, une des méthodes du controller est exécutée. Mais comment savoir quelle méthode utiliser ?
+
+De nouveau grâce à une annotation. Voici un exemple :
+```java
+@Controller
+public class EmployeeController {
+
+    @GetMapping("/")
+    public String home() {
+        return "home";
+    }
+
+}
+```
+
+Le concept est le suivant :
+1. L’annotation spécifie le type de requête HTTP et l’URL correspondante.
+2. Le texte “home” retourné correspond au nom du fichier HTML.
+
+C’est là que la magie de Spring Boot opère ! À l’appel de l’URL racine (via le type GET, qui est utilisé par défaut dans les navigateurs) de mon application web, la méthode home() sera **automatiquement exécutée**, et Spring **renverra automatiquement une réponse** HTTP contenant dans son corps (donc le body HTTP) le contenu du fichier home.html. Tadaa !
+
+#### À vous de jouer !
+Petit exercice pour vous :
+1. Ajoutez un fichier home.html dans le répertoire Template. 
+2. Mettez un petit bout de HTML dedans (qu’importe). 
+3. Créez la classe EmployeeController avec le code ci-dessus.
+4. Exécutez votre webapp.
+5. Allez sur http://localhost:9001/
+6. Constatez le résultat.
+
+Alors, pas mal, hein ?
+
+C’est un bon début, mais nous avons besoin d’aller plus loin ! Vous devez certainement vous poser les questions suivantes :
+
+> Comment afficher dans le HTML une donnée provenant du Java (par exemple une donnée récupérée grâce à la couche service) ?
+> 
+> Comment le code Java peut-il récupérer une donnée provenant de la page web source (par exemple, ce qu’un utilisateur a saisi dans un formulaire) ?
+
+Je vais vous expliquer comment faire ! Dans les deux cas, Spring Web nous fournit des objets pour réussir, et Thymeleaf nous facilite la tâche.
+
+> Attention, ce cours n’a pas pour vocation à vous apprendre le HTML, le CSS, Thymeleaf ou même Spring Web dans le détail. Je vais donc vous montrer un exemple simple, et je vous encourage à creuser pour aller plus loin.
+
+#### Fournissez des données à la vue
+**Premièrement** : *Comment fournir des données à la vue ?*
+Spring met à disposition différentes classes pour cela. Regardez cet exemple :
+```java
+@GetMapping("/")
+public String home(Model model) {
+    Iterable<Employee> listEmployee = service.getEmployees();
+    model.addAttribute("employees", listEmployee);
+    
+    return "home";
+}
+```
+
+L’objet **Model** (org.springframework.ui.Model) a été ajouté en paramètre de la méthode home(). Grâce à cela, Spring se charge de nous fournir une instance de cet objet.
+
+Puis, dans le corps de la méthode, j’utilise une méthode *addAttribute* qui permet d’ajouter à mon Model un objet. Le premier paramètre spécifie le **nom** (de mon choix) et le deuxième **l’objet** (ici, la liste des employés en Iterable). 
+
+Ajouter des attributs au Model me permet d’y accéder dans la vue HTML. Comment ? Grâce à Thymeleaf.
+
+Je souhaite mettre en lumière 2 aspects de ce code HTML :
+```html
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhml" xmlns:th="http://www.thymeleaf.org">
+    
+    <head>
+        <meta charset="UTF-8">
+        <title>Employee Web Application</title>
+    </head>
+    <body>
+        <h2 class="h2">Liste des employées</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Prénom</th>
+                    <th>Nom</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${employees.empty}">
+                    <td colspan="3">Aucun employée en base de données</td>
+                </tr>
+                <tr th:each="employee: ${employees}">
+                    <td><span th:text="${employee.firstName}"> Prénom </span></td>
+                    <td><span th:text="${employee.lastName}"> Nom </span></td>
+                </tr>
+            </tbody>
+        </table>
+    </body>
+</html>
+```
+
+Les instructions **th:if** et **th:each** qui permettent respectivement d’implémenter une condition et une itération, fonctionnalités non présentes en HTML. Thymeleaf me fournit donc la capacité d’écrire un **code HTML dynamique**.
+
+La syntaxe **\${nom de l’attribut}** permet d’accéder à un objet placé comme attribut dans le Model. Notons également que Thymeleaf comprend la programmation objet, et que la syntaxe **\${$objet.attribut}** fonctionne. C’est d’ailleurs ce que je fais pour accéder aux prénom et nom de l’employé.
+
+Vous pouvez tester ce code ;-)
+
+#### Récupérez une donnée provenant de la page web source
+**Deuxièmement** : *Comment le code Java peut-il, à l’inverse, récupérer une donnée provenant de la page web source ?*
+
+Voyons 2 situations : une donnée transmise par URL (donc en GET) et une donnée transmise par formulaire (donc en POST).
+
+##### Situation n° 1 : la donnée est transmise par URL
+Intéressons-nous d’abord au cas d’une donnée transmise par URL :
+```java
+@GetMapping("/deleteEmployee/{id}")
+public ModelAndView deleteEmployee(@PathVariable("id") final int id) {
+    service.deleteEmployee(id);
+    return new ModelAndView("redirect:/");
+}
+```
+
+La méthode **deleteEmployee** possède un paramètre nommé id de type int ; cependant le point clé est l’annotation **@PathVariable** qui signifie que ce paramètre est présent dans l’URL de requête (par exemple http://localhost:9001/deleteEmployee/1). Je peux ensuite me servir de la variable id dans le code : `service.deleteEmployee(id)`;
+
+Côté Thymeleaf, voici le code correspondant :
+```html
+<a th:href="@{/deleteEmployee/{id}(id=${employee.id})}">Supprimer</a>
+```
+
+On utilise l’attribut **th:hreaf** de Thymeleaf, et la syntaxe **@{**} permet de définir une URL. Le chemin `/deleteEmployee/` est complété par l’id à fournir grâce à la syntaxe : `{id}(id==${employee.id})`.
+
+Passons maintenant au cas d’une donnée transmise par un formulaire.
+
+##### Situation n° 2 : la donnée est transmise par un formulaire
+```java
+@PostMapping("/saveEmployee")
+public ModelAndView saveEmployee(@ModelAttribute Employee employee) {
+    service.saveEmployee(employee);
+    return new ModelAndView("redirect:/");
+}
+```
+
+La méthode **saveEmployee** est annotée **@PostMapping** et non @GetMapping. Effectivement, il s’agit ici de traiter la validation d’un formulaire, et généralement les formulaires exécutent des requêtes POST.
+
+L’autre point clé est le paramètre de la méthode `@ModelAttribute Employee employee`. @ModelAttribute est l’annotation magique. Cette annotation permet à Spring de récupérer les données saisies dans les champs du formulaire et de construire un objet Employee avec.
+
+Côté Thymeleaf :
+```html
+<form method="post" th:action="@{/saveEmployee}" th:object="${employee}">
+    <input type="text" th:field="*{firstName}">
+    <input type="text" th:field="*{lastName}">
+    <input type="text" th:field="*{mail}">
+    <input type="password" th:field="*{password}">
+    <button type="submit" c>Créer</button>
+</form>
+```
+
+**th: object=${employee}** fait le lien avec le ModelAttribute.
+
+**th:field** donne la correspondance avec les attributs de l’objet associé. Vous pouvez noter la syntaxe particulière : “***{firstName}**”.
+
+Je vais m’arrêter là pour les explications pour ce chapitre. Il a été très dense, et j’ai dû vous transmettre de nombreuses notions. La majorité sont d’ailleurs à approfondir et c’est normal, ici l’objectif était de vous lancer sur les rails, et non pas de vous accompagner jusqu’au bout du chemin.
+
+Le plus important est que vous avez pu constater comment Spring Boot **vous rend plus performant** pour réaliser une application web !
+
+> Vous pouvez retrouver sur ce [repository GitHub](https://github.com/OpenClassrooms-Student-Center/HR-Association/tree/master/webapp) le code complet, vous retrouverez ce que je vous ai montré et quelques détails supplémentaires ! 
+
+### En résumé
+- Créer une application web avec Spring Boot correspond à suivre l’**architecture MVC** :
+    - le **modèle** correspond aux classes Java qui représentent les **données** à manipuler ;
+    - la **vue** correspond aux fichiers **HTML** qui seront retournés à l’utilisateur ;
+    - le **contrôleur** correspond aux classes **Java** annotées @Controleur qui font du mapping d’URL (avec par exemple @GetMapping) ;
+    - les couches service et repository sont utilisées par les contrôleurs pour obtenir les données à fournir à la vue.
+- **RestTemplate** est l’objet clé pour **communiquer avec une API**. Non seulement il exécute des requêtes HTTP, mais en plus il transforme le résultat JSON en objet Java.
+
+### Testez et déployez votre projet web
+Amis de Spring Boot, bonjour ! (Si vous êtes arrivés à ce dernier chapitre, c’est forcément que vous êtes devenus amis. )
+
+Pour conclure ce projet web, nous devons non seulement le **tester**, mais également le **déployer**.
+
+Ce chapitre ne devrait pas être trop complexe pour vous, surtout si vous avez suivi la partie 3 du cours.
+
+#### Réalisez un test d’intégration
+D’ailleurs à tous ceux qui ont suivi la partie 3, je vous propose l’exercice suivant : **réaliser un test d’intégration pour l’appel de la page d’accueil** (donc URL : “/”) ! On ne vérifiera pas le contenu, mais uniquement le statut. 
+
+Pour les autres, je vous donne la solution juste en dessous.
+
+À travers le screencast suivant, je vais vous montrer ma façon de faire, et je vais même vous en apprendre un peu plus.  C’est parti !
+
+C’était vraiment intéressant de réussir à tester en Java l’appel de notre contrôleur !
+
+Je vous remets le code ici :
+```java
+package com.test.webapp;
+
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.servlet.MockMvc;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+public class EmployeeControllerTest {
+
+    @Autowired
+    public MockMvc mockMvc;
+
+    @Test
+    public void testGetEmployees() throws Exception {
+        mockMvc.perform(get("/"))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(view().name("home"))
+            .andExpect(content().string(containsString("Laurent")));
+    }
+
+}
+```
+
+Les points importants sont les suivants :
+- L’annotation **@SpringBootTest** permet au contexte Spring d’être chargé lors de l’exécution des tests.
+- Pour exécuter une requête au contrôleur, on utilise un objet **MockMvc** ; l’attribut correspondant doit être annoté @Autowired pour l'injection de la dépendance. Et la classe doit obligatoirement être annotée **@AutoConfigureMockMvc**, afin qu’un objet MockMvc soit disponible dans le contexte Spring (ainsi il pourra être injecté dans l’attribut).
+- La méthode **perform** a en paramètre l’URL à appeler. Puis il s’ensuit une suite d’instructions pour vérifier l’attendu :
+    - status().isOk() : la réponse a un code de statut 200 ;
+    - view().name(“home”) : le nom de vue retourné correspond au paramètre “home” ;
+    - content().string(containsString("Laurent")) : le corps de la réponse contient à un moment ou à un autre le texte Laurent.
+- Notons également que andDo(print()) permet au retour de l’appel d’être affiché dans la console (on y verra donc tout le HTML généré).
+
+> À vous d’être pertinent dans ce qui est attendu dans le corps de la réponse !
+
+#### Déployez votre application web
+La dernière étape correspond au déploiement. Grâce à Spring Boot, c’est vraiment une formalité ; d’ailleurs, à vous de jouer : déployez votre application ! 
+
+Le screencast suivant sera le dernier du cours, et je vais vous montrer comment déployer l’application web en ayant au préalable également déployé l’API.
+
+Pour l’occasion, j’ai mis un peu de design sur les pages HTML (merci Bootstrap ). Regardons tout ça ensemble :
+
+#### En résumé
+- L’application web peut être testée grâce à @SpringBootTest.
+- L’objet MockMvc permet d’exécuter des requêtes, comme le ferait un navigateur web.
+- Le déploiement est facilité avec Tomcat qui est embarqué dans le JAR généré.
+
+## Le mot de fin
+L’univers Spring est immense, et il y a encore beaucoup à découvrir ; mais j’espère que cette base sera un fondement solide pour la suite de votre progression. Prenez le temps de pratiquer, et allez encore plus loin !
+
+Voici quelques idées :
+
+Augmentez votre capacité à utiliser Spring Web pour réaliser des applications web performantes.
+
+Découvrez Spring Security pour la sécurisation de vos applications.
+
+Plongez-vous dans l’architecture microservices grâce à Spring Cloud.
+
+J’en suis convaincu, vous serez des développeurs encore plus performants et efficaces !
